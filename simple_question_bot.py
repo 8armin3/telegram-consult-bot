@@ -32,7 +32,8 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif context.user_data.get("waiting_for_question"):
         question = text
         context.user_data["waiting_for_question"] = False
-        await update.message.reply_text("سؤالت ارسال شد ✅", reply_markup=main_keyboard)
+        await
+ update.message.reply_text("سوالتون با موفقیت ارسال شد✨", reply_markup=main_keyboard)
 
         if ADMIN_CHAT_ID:
             user = update.effective_user
@@ -54,5 +55,5 @@ def main():
 
 
 # --- اجرای برنامه ---
-if __name__ == "__main__":
+if name == "main":
     main()
