@@ -1,24 +1,42 @@
+import os
+from threading import Thread
+from flask import Flask
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
+# ================= CONFIG =================
 TOKEN = "8556495652:AAFWKmjfCtZVbXyDCW_5dLJ8nFeXUBDjEZU"
 CHANNEL_LINK = "https://t.me/easyknkr"
-ADMIN_CHAT_ID = 0  # اگه می‌خوای سوالا برای ادمین برن، آیدیتو بزار
+ADMIN_CHAT_ID = 0  # اگه می‌خوای سوالا برای ادمین برن، آیدیتو اینجا بذار (مثلاً 123456789)
 
-# --- دکمه‌های اصلی ---
+# ================= WEB SERVER برای Render =================
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "🤖 Bot is running successfully!"
+
+def run_web():
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
+
+def keep_alive():
+    thread = Thread(target=run_web)
+    thread.daemon = True
+    thread.start()
+
+# ================= TELEGRAM BOT =================
 main_keyboard = ReplyKeyboardMarkup(
     [["❓ سوال دارم", "📢 لینک کانال مشاوره"]],
     resize_keyboard=True
 )
 
-# --- دستور /start ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "سلام 👋 به بات چت ناشناس مجموعه ایزی کنکور خوش اومدی.\nلطفا یکی از گزینه‌ها رو انتخاب کن:",
         reply_markup=main_keyboard
     )
 
-# --- هندلر پیام‌ها ---
 async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
@@ -32,8 +50,7 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif context.user_data.get("waiting_for_question"):
         question = text
         context.user_data["waiting_for_question"] = False
-        await
- update.message.reply_text("سوالتون با موفقیت ارسال شد✨", reply_markup=main_keyboard)
+        await update.message.reply_text("سؤالت ارسال شد ✅", reply_markup=main_keyboard)
 
         if ADMIN_CHAT_ID:
             user = update.effective_user
@@ -41,19 +58,20 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=msg)
 
     else:
-        await update.message.reply_text("از منوی پایین یکی از گزینه‌ها رو انتخاب کن 👇", reply_markup=main_keyboard)
+        await update.message.reply_text(
+            "از منوی پایین یکی از گزینه‌ها رو انتخاب کن 👇",
+            reply_markup=main_keyboard
+        )
 
-
-# --- تابع اصلی ---
+# ================= MAIN =================
 def main():
-    app = ApplicationBuilder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_buttons))
+    keep_alive()  # نگه داشتن سرور برای Render
+    app_tg = ApplicationBuilder().token(TOKEN).build()
+    app_tg.add_handler(CommandHandler("start", start))
+    app_tg.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_buttons))
 
     print("🤖 Bot is running...")
-    app.run_polling()
+    app_tg.run_polling()
 
-
-# --- اجرای برنامه ---
-if name == "main":
+if __name__ == "__main__":
     main()
