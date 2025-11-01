@@ -34,12 +34,6 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("از منوی پایین یکی از گزینه‌ها رو انتخاب کن 👇", reply_markup=main_keyboard)
 
-def main():
-    app = ApplicationBuilder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_buttons))
-    print("🤖 Bot is running...")
-    app.run_polling()
 
     def main():
     app = ApplicationBuilder().token(TOKEN).build()
